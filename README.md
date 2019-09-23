@@ -2,11 +2,11 @@
 CP/KM midi; a CP/M ver 2.2 emulator running on KM-Z80 midi
 
 ## about CP/KM midi
-CP/KM midi is an emulator of PC running with CP/M (ver 2.2; 54k system). This project also contains construction of a MachiKania family computer board platform.
+CP/KM midi is an emulator of PC running with CP/M (ver 2.2; 54k system).
+This project also contains construction of a MachiKania family computer board platform.
 
 ## to compile
 Use XC32 ver 1.32 for comipling the source code.
-Select either ntsc.c or lcd.c for NTSC video monitor or ILI9341 LCD monitor.
 Heap and stack sizes are both 512 bytes. Optimizaion level is 1.
 
 ## License
