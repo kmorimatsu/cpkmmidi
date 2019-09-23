@@ -164,7 +164,7 @@ void write_hexline_to_ram(){
 }
 
 #define FWRITER_FILE_NAME "FWRITER.HEX"
-#define RIGHT_ALLOW 0x40
+#define RIGHT_ALLOW '>'
 
 int is_same_str(char* str1, char* str2){
 	int i;
@@ -179,7 +179,7 @@ void load_hexfile_and_run(char* filename){
 	unsigned int i;
 	static char* const appfilename=(char* const)0xA000FFF0;  
 	// Open file
-	err=hex_init_file(&VRAM[0],FWRITER_FILE_NAME);
+	err=hex_init_file(&VRAM[2400-512],FWRITER_FILE_NAME);
 	if (err) stop_with_error(err);
 	// Stop video
 	T2CONbits.ON=0;
@@ -239,12 +239,12 @@ void file_select(void){
 	if (!connect_usb()) return;
 	// Print header
 	printstr(0,"MachiKania Boot: Move \x22\x20\x22 and Push CR");
-	VRAM[23]=RIGHT_ALLOW;
+	printchar(23,RIGHT_ALLOW);
 	// Directory listing
    	filenum=0;
-	cursor=121;
+	cursor=241;
 	if(FindFirst("*.hex",ATTR_MASK,&sr)){
-		printstr(120,"No HEX File Found");
+		printstr(240,"No HEX File Found");
 		while(1) asm volatile("wait");
 	} else {
 		do{
@@ -252,19 +252,23 @@ void file_select(void){
 			printstr(cursor,sr.filename);
 			filenum++;
 			cursor+=13;
-			if (0==(filenum % 3)) cursor++;
+			if (0==(filenum % 3)) cursor+=41;
 		} while(!FindNext(&sr) && filenum<66);
 	}
 
 	// Select a file
-	cursor=120;
+	cursor=240;
 	drawcount=0;
 	while(deviceAttached){
 		// Blink the cursor
-		if (drawcount&16) VRAM[cursor]=0;
-		else VRAM[cursor]=RIGHT_ALLOW;
+		if (drawcount&16) printchar(cursor,0x20);
+		else printchar(cursor,RIGHT_ALLOW);
 		// Detect CR key
 		if (g_keymatrix2[8]&(1<<4)) {
+			// Null byte after file name
+			for(i=1;VRAM[cursor+i]!=0x20;i++);
+			VRAM[cursor+i]=0x00;
+			// Load and run the hex file
 			load_hexfile_and_run(&VRAM[cursor+1]);
 		}
 		// Detect right/left key
@@ -272,19 +276,19 @@ void file_select(void){
 			// Detect shift key
 			if (g_keymatrix2[8]&((1<<0)|(1<<5))) {
 				i=cursor-13;
-				if ((i%40)==27) i--;
+				if ((i%40)==27) i-=41;
 			} else {
 				i=cursor+13;
-				if ((i%40)==39) i++;
+				if ((i%40)==39) i+=41;
 			}
 			// Check if valid movement
-			if (i<120) i=cursor;
-			else if (1000<i) i=cursor;
-			else if (0x00==VRAM[i+1]) i=cursor;
+			if (i<240) i=cursor;
+			else if (1920<i) i=cursor;
+			else if (0x20==VRAM[i+1]) i=cursor;
 			// Refresh view
-			VRAM[cursor]=0;
+			printchar(cursor,0x20);
 			cursor=i;
-			VRAM[cursor]=RIGHT_ALLOW;
+			printchar(cursor,RIGHT_ALLOW);
 			drawcount=0;
 			// Wait while key down
 			while(g_keymatrix2[8]&(1<<3)){
@@ -295,18 +299,18 @@ void file_select(void){
 		if (g_keymatrix2[9]&(1<<2)) {
 			// Detect shift key
 			if (g_keymatrix2[8]&((1<<0)|(1<<5))) {
-				i=cursor-40;
+				i=cursor-80;
 			} else {
-				i=cursor+40;
+				i=cursor+80;
 			}
 			// Check if valid movement
-			if (i<120) i=cursor;
-			else if (1000<i) i=cursor;
-			else if (0x00==VRAM[i+1]) i=cursor;
+			if (i<240) i=cursor;
+			else if (2000<i) i=cursor;
+			else if (0x20==VRAM[i+1]) i=cursor;
 			// Refresh view
-			VRAM[cursor]=0;
+			printchar(cursor,0x20);
 			cursor=i;
-			VRAM[cursor]=RIGHT_ALLOW;
+			printchar(cursor,RIGHT_ALLOW);
 			drawcount=0;
 			// Wait while key down
 			while(g_keymatrix2[9]&(1<<2)){

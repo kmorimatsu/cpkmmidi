@@ -26,6 +26,7 @@ unsigned short g_keybuff[32];
 unsigned char g_keymatrix[16];
 volatile unsigned char g_keymatrix2[10];
 unsigned char g_video_disabled;
+unsigned char g_beep;
 volatile unsigned char g_vblank;
 
 #define lcd_send_command() do {LATBbits.LATB0=0;} while(0)
@@ -160,6 +161,11 @@ void video_init(void){
 	IFS0bits.T2IF=0;
 	IEC0bits.T2IE=1;
 
+	// Initialize beep
+	g_beep=0;
+	// Output to RB15
+	TRISBbits.TRISB15=0;
+
 	// SPI ON
 	SPI1CONbits.ON=1;
 
@@ -244,8 +250,19 @@ void __ISR(_TIMER_2_VECTOR,IPL7SOFT) T2Handler(void){
 	static short s_x=39;
 	static short s_y=25;
 	static char s_video_disabled=0;
+	static char s_beep;
 	unsigned char data[4];
+	// Clear flag
 	IFS0bits.T2IF=0;
+	// Beep if needed
+	if (g_beep) {
+		s_beep++;
+		if (18<s_beep) {
+			LATBINV=1<<15;
+			s_beep=0;
+		}
+	}
+	// Main starts here
 	s_line++;
 	if (s_line<11) {
 		// s_line: 1-10

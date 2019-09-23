@@ -154,15 +154,6 @@ BOOL USB_ApplicationEventHandler( BYTE address, USB_EVENT event, void *data, DWO
     return FALSE;
 }
 
-int fileselect(int save){
-}
-
-void filelist_view(void){
-}
-
-void mz_view(void){
-}
-
 char connect_usb(void){
 	// Detect USB memory
 	drawcount=0;
@@ -252,6 +243,8 @@ void cpm_read(unsigned short address){
 		// TODO: error handling
 		FSfseek(g_handle,address<<7,SEEK_SET);
 		FSfread(&RAM[0xdf80],1,128,g_handle);
+		// Blink LED
+		LATBINV=1<<1;
 	} else {
 		// If cpmdisks are not open, use fake system disk image.
 		for(i=0;i<128;i++) RAM[0xdf80+i]=fakesys[(address<<7)+i];
@@ -265,5 +258,7 @@ void cpm_write(unsigned short address){
 		// TODO: consider closing file after writing
 		FSfseek(g_handle,address<<7,SEEK_SET);
 		FSfwrite(&RAM[0xdf80],1,128,g_handle);
+		// Blink LED
+		LATBINV=1<<1;
 	}
 }

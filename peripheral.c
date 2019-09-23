@@ -28,7 +28,7 @@ void peripheral_init(void){
 	g_portC=0xff;
 	// Clear cursor
 	g_cursor=0;
-	g_cursorchar=0x20;
+	g_cursorchar=VRAM[g_cursor];
 	g_blinktimer=0;
 	// Initialize key
 	g_caps=0;
@@ -112,6 +112,7 @@ void cpm_conout(unsigned char ascii){
 	if (g_blinktimer<30) {
 		printchar(g_cursor,g_cursorchar);
 	}
+	g_blinktimer=30;
 	switch(ascii){
 		case 0x00: // null
 		case 0x02: // ^B
@@ -139,8 +140,11 @@ void cpm_conout(unsigned char ascii){
 			g_cursor++;
 			if (80*24<=g_cursor) g_cursor=80*24-1;
 			break;
-		case 0x07: // ^G
-			printchar(g_cursor,0x20);
+		case 0x07: // ^G (BEL)
+			g_beep=1;
+			wait_msec(500);
+			printchar(g_cursor,g_cursorchar);
+			g_beep=0;
 			break;
 		case 0x09: // ^I (TAB)
 			if ((g_cursor%80)<70) {
@@ -333,14 +337,11 @@ void __ISR(_CORE_SOFTWARE_0_VECTOR,IPL3SOFT) CS0Hanlder(void){
 	s_prevchar=curchar;
 	// Check caps key
 	curchar=g_keymatrix2[6]&0x20;
-	if (s_prevcaps!=curchar && curchar) {
-		if (g_caps) {
-			g_caps=0;
-			led_green();
-		} else {
-			g_caps=1;
-			led_red();
-		}
+	if (s_prevcaps!=curchar && curchar) g_caps=1-g_caps;
+	if (g_caps) {
+		led_red();
+	} else {
+		led_green();
 	}
 	// Update static data
 	s_prevcaps=curchar;
