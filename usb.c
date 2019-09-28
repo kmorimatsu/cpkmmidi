@@ -240,8 +240,12 @@ void cpm_read(unsigned short address){
 	int i;
 	if (g_handle) {
 		// If cpmdisks are open, read from it.
-		// TODO: error handling
-		FSfseek(g_handle,address<<7,SEEK_SET);
+		if (FSfseek(g_handle,address<<7,SEEK_SET)) {
+			// Error occured. USB memory may be disconnected and reconnected.
+			FSfclose(g_handle);
+			cpmdisks_init();
+			FSfseek(g_handle,address<<7,SEEK_SET);
+		}
 		FSfread(&RAM[0xdf80],1,128,g_handle);
 		// Blink LED
 		LATBINV=1<<1;
@@ -254,9 +258,12 @@ void cpm_read(unsigned short address){
 void cpm_write(unsigned short address){
 	if (g_handle) {
 		// If cpmdisks are open, write to it.
-		// TODO: error handling
-		// TODO: consider closing file after writing
-		FSfseek(g_handle,address<<7,SEEK_SET);
+		if (FSfseek(g_handle,address<<7,SEEK_SET)) {
+			// Error occured. USB memory may be disconnected and reconnected.
+			FSfclose(g_handle);
+			cpmdisks_init();
+			FSfseek(g_handle,address<<7,SEEK_SET);
+		}
 		FSfwrite(&RAM[0xdf80],1,128,g_handle);
 		// Blink LED
 		LATBINV=1<<1;
