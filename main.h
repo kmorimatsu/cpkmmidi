@@ -18,6 +18,7 @@ extern unsigned char g_beep;
 extern volatile unsigned char g_vblank;
 extern unsigned char* RAM;
 extern unsigned char* VRAM;
+extern unsigned char g_caps;
 
 unsigned int coretimer(void);
 void reset_g_timer1(void);
@@ -36,19 +37,10 @@ void printhex16(int cursor, unsigned short val);
 void printhex32(int cursor, unsigned int val);
 void vertical_scroll(void);
 
-void loadTape();
-
-unsigned char readE008();
-void writeE008(unsigned char data);
-
-unsigned char read8253(unsigned short addr);
-void write8253(unsigned short addr, unsigned char data);
-unsigned char read8255(unsigned short addr);
-void write8253(unsigned short addr, unsigned char data);
-
 void init_usb(void);
 char connect_usb(void);
 char try_usbmemory(unsigned short regPC);
 void cpmdisks_init(void);
+void init_file(void);
 
 void file_select(void);

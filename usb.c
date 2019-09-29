@@ -269,3 +269,57 @@ void cpm_write(unsigned short address){
 		LATBINV=1<<1;
 	}
 }
+
+unsigned char nextIs(unsigned char* str,int point){
+	unsigned char i;
+	// Skip blank
+	for(i=0;0x20==RAM[point+i];i++);
+	// Check
+	while(str[0]){
+		if (str[0]!=RAM[point+i]) return 0;
+		str++;
+		i++;
+	}
+	// All done
+	return i;
+}
+
+void init_file(void){
+	int point,end;
+	unsigned char c;
+	FSFILE* fhandle;
+	// Read ini file to RAM area
+	fhandle=FSfopen("cpkmmidi.ini","r");
+	if (!fhandle) return;
+	end=0xbc00+FSfread(&RAM[0xbc00],1,0x2400,fhandle);
+	FSfclose(fhandle);
+	// All Upper cases. 0x0d to 0x0a. Tab to space
+	for(point=0xbc00;point<end;point++){
+		c=RAM[point];
+		if ('a'<=c && c<='z') RAM[point]=c-0x20;
+		else if (0x0d==c) RAM[point]=0x0a;
+		else if (0x09==c) RAM[point]=0x20;
+	}
+	// Explore
+	point=0xbc00;
+	while(point<end){
+		// Check if comment
+		if ('#'!=RAM[point]) {
+			// Check CAPSLOCK
+			if (c=nextIs("CAPSLOCK ",point)) {
+				point+=c;
+				if (c=nextIs("ON",point)) {
+					point+=c;
+					g_caps=1;
+				} else if (c=nextIs("OFF",point)) {
+					point+=c;
+					g_caps=0;
+				}
+			}
+		}
+		// Go to next line
+		while(point<end && 0x0a!=RAM[point++]);
+		// Skip blank line
+		while(point<end && 0x0a==RAM[point]) point++;
+	}
+}

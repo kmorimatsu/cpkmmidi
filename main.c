@@ -92,6 +92,9 @@ void main(void){
 	// Initialize CP/M disks.
 	cpmdisks_init();
 
+	// Read ini file
+	init_file();
+
 	// Initialize Z80
 	resetZ80();
 	// Initialize timer for Z80 emulation
